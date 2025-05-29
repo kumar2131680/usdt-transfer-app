@@ -1,0 +1,74 @@
+<script src="https://cdn.jsdelivr.net/npm/tronweb@latest/dist/TronWeb.js"></script>
+<div class="container">
+  <h2>vUSDT Transfer</h2>
+  <p><strong>Your Token Balance:</strong> <span id="tokenBalance">Loading...</span></p>
+  <input type="text" id="recipient" placeholder="Recipient Address (T...)" />
+  <input type="number" id="amount" placeholder="Amount" />
+  <button onclick="sendToken()">Send Token</button>
+  <p id="txStatus"></p>
+</div>
+<script>
+  const contractAddress = "TXXXXXXXXXXXXXXXXXXXXXX"; // Replace with your deployed contract address
+  const decimals = 6;
+  let contractInstance;
+
+  async function init() {
+    if (!window.tronWeb || !tronWeb.ready) {
+      document.getElementById("txStatus").textContent = "❌ TronLink not connected.";
+      return;
+    }
+
+    contractInstance = await tronWeb.contract([
+      {
+        "constant": true,
+        "inputs": [{"name": "_owner", "type": "address"}],
+        "name": "balanceOf",
+        "outputs": [{"name": "balance", "type": "uint256"}],
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {"name": "_to", "type": "address"},
+          {"name": "_value", "type": "uint256"}
+        ],
+        "name": "transfer",
+        "outputs": [{"name": "success", "type": "bool"}],
+        "type": "function"
+      }
+    ], contractAddress);
+
+    loadBalance();
+  }
+
+  async function loadBalance() {
+    const address = tronWeb.defaultAddress.base58;
+    const result = await contractInstance.balanceOf(address).call();
+    const balance = result / Math.pow(10, decimals);
+    document.getElementById("tokenBalance").textContent = balance.toFixed(2);
+  }
+
+  async function sendToken() {
+    const to = document.getElementById("recipient").value.trim();
+    const amount = parseFloat(document.getElementById("amount").value);
+    const statusEl = document.getElementById("txStatus");
+
+    if (!to || isNaN(amount) || amount <= 0) {
+      statusEl.textContent = "❌ Enter valid address and amount.";
+      return;
+    }
+
+    try {
+      const result = await contractInstance.transfer(to, amount * Math.pow(10, decimals)).send({
+        feeLimit: 10000000
+      });
+      statusEl.textContent = `✅ Sent! TxID: ${result}`;
+      loadBalance();
+    } catch (err) {
+      statusEl.textContent = `❌ Error: ${err.message}`;
+    }
+  }
+
+  // Run init after DOM is ready
+  window.addEventListener('load', init);
+</script>
