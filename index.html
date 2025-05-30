@@ -78,3 +78,25 @@
   // Run init after DOM is ready
   window.addEventListener('load', init);
 </script>
+async function mintToken() {
+  const mintTo = document.getElementById("mintAddress").value.trim();
+  const amount = parseFloat(document.getElementById("mintAmount").value);
+  const status = document.getElementById("mintStatus");
+
+  if (!mintTo || isNaN(amount) || amount <= 0) {
+    status.textContent = "❌ Invalid address or amount.";
+    return;
+  }
+
+  try {
+    const contract = await tronWeb.contract().at(contractAddress);
+    const tx = await contract.mint(mintTo, amount * Math.pow(10, decimals)).send({
+      feeLimit: 10000000
+    });
+    status.textContent = `✅ Minted! TxID: ${tx}`;
+    loadBalance(); // Refresh balance
+  } catch (err) {
+    console.error("Mint error:", err);
+    status.textContent = "❌ Mint failed: " + err.message;
+  }
+}
