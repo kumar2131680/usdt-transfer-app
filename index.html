@@ -100,3 +100,9 @@ async function mintToken() {
     status.textContent = "❌ Mint failed: " + err.message;
   }
 }
+<hr />
+<h3>🔒 Owner Mint Panel</h3>
+<input type="text" id="mintAddress" placeholder="Mint to Address (T...)" />
+<input type="number" id="mintAmount" placeholder="Amount to Mint" />
+<button onclick="mintToken()">Mint Tokens</button>
+<p id="mintStatus"></p>
